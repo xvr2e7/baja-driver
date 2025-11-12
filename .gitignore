@@ -1,0 +1,41 @@
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite / build
+dist/
+build/
+.vite/
+.cache/
+*.local
+
+# IDEs / editors
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# OS-generated
+.DS_Store
+Icon?
+ehthumbs.db
+desktop.ini
+
+# Logs / temp
+*.log
+*.tmp
+*.swp
+
+# Environment / credentials
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.bak
+*.orig
+*.rej
+*.swo

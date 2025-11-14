@@ -47,7 +47,7 @@ export class BlockCar {
     const down = this._keys.has("ArrowDown") || this._keys.has("KeyS");
 
     const steerInput = (left ? 1 : 0) - (right ? 1 : 0);
-    const throttleInput = (up ? 1 : 0) - (down ? 1 : 0);
+    const throttleInput = (down ? 1 : 0) - (up ? 1 : 0) ;
 
     this.steer = steerInput;
     this.throttle = throttleInput;

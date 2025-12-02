@@ -4,8 +4,12 @@ import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { setupRenderer } from "./rendering/RendererSetup.js";
 import { setupLighting } from "./rendering/LightingManager.js";
 import { createTerrain } from "./world/TerrainGenerator.js";
+import {addRocks} from "./world/rocks.js";
+import { addTrees } from "./world/trees.js";
 import { CameraRig } from "./rendering/CameraController.js";
 import { BlockCar } from "./physics/VehicleDynamics.js";
+import { buildRockColliders, buildTreeColliders, resolveCarCollisions,  } from "./physics/collision.js";
+
 
 // ---------------------------------------------------------------------------
 // Scene & renderer
@@ -31,6 +35,27 @@ const { terrainMesh, getHeightAndNormal } = createTerrain({
 terrainMesh.receiveShadow = true;
 scene.add(terrainMesh);
 
+const rocks = addRocks(scene, terrainMesh, getHeightAndNormal, {
+  count: 300,
+  minScale: 0.25,
+  maxScale: 1.2,
+  color: 0x6a5a48,
+  avoidRadius: 10,
+  avoidSteep: 0.55,
+  cluster: { enabled: true, clusters: 12, clusterRadius: 10 }
+});
+const rockColliders = buildRockColliders(rocks, { baseRadius: 0.9, breakable: false });
+
+
+const trees = addTrees(scene, terrainMesh, getHeightAndNormal, {
+  count: 60,
+  avoidRadius: 10,
+  minScale: 1.2,
+  maxScale: 1.9,
+  clusters: { enabled: true, n: 10, radius: 12 },
+});
+const treeColliders = buildTreeColliders(trees, { baseRadius: 1.2 });
+
 // ---------------------------------------------------------------------------
 // Lighting
 // ---------------------------------------------------------------------------
@@ -49,6 +74,7 @@ const car = new BlockCar({
 });
 
 scene.add(car.mesh);
+
 
 // Hide the blue block but keep it for physics
 car.mesh.traverse((child) => {
@@ -116,6 +142,14 @@ function animate() {
 
   const dt = Math.min(0.033, clock.getDelta());
   car.update(dt, getHeightAndNormal);
+  
+  resolveCarCollisions(car, rockColliders, treeColliders,
+  {restitution: 0.45,
+  friction: 0.7,
+  carRadiusFactor: 0.6,
+  breakThreshold: 6.5,
+  debug: false});
+
   cameraRig.update(dt);
 
   renderer.render(scene, cameraRig.camera);

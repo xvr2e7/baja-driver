@@ -14,8 +14,8 @@ export function createTerrain({
   size = 400,
   segments = 200,
   amp = 2,
-  freqX = 0.1,
-  freqZ = 0.1,
+  freqX = .1,
+  freqZ = .1,
 } = {}) {
   const geo = new THREE.PlaneGeometry(size, size, segments, segments);
   geo.rotateX(-Math.PI / 2);

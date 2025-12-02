@@ -40,6 +40,8 @@ export class BlockCar {
     this._quat = new THREE.Quaternion();
   }
 
+    
+
   _handleInput(dt) {
     const left = this._keys.has("ArrowLeft") || this._keys.has("KeyA");
     const right = this._keys.has("ArrowRight") || this._keys.has("KeyD");

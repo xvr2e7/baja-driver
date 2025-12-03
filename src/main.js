@@ -62,12 +62,12 @@ car.mesh.traverse((child) => {
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
 
-mtlLoader.load("/models/WombatTyphoon.mtl", (materials) => {
+mtlLoader.load("/models/Car.mtl", (materials) => {
   materials.preload();
   objLoader.setMaterials(materials);
 
   objLoader.load(
-    "/models/WombatTyphoon.obj",
+    "/models/Car.obj",
 
     (object) => {
       object.traverse((child) => {

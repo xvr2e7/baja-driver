@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { setupRenderer } from "./rendering/RendererSetup.js";
-import { setupLighting } from "./rendering/LightingManager.js";
+import { LightingManager } from "./rendering/LightingManager.js";
 import { createTerrain } from "./world/TerrainGenerator.js";
 import { CameraRig } from "./rendering/CameraController.js";
 import { BlockCar } from "./physics/VehicleDynamics.js";
@@ -15,6 +15,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
 const renderer = setupRenderer(document.querySelector("#app"));
+
+// Enable VSM shadows for softer look
+renderer.shadowMap.type = THREE.VSMShadowMap;
 
 // ---------------------------------------------------------------------------
 // Terrain
@@ -32,10 +35,13 @@ terrainMesh.receiveShadow = true;
 scene.add(terrainMesh);
 
 // ---------------------------------------------------------------------------
-// Lighting
+// Lighting with day/night cycle
 // ---------------------------------------------------------------------------
 
-setupLighting(scene);
+const lighting = new LightingManager(scene, {
+  cycleSpeed: 0.015, // Adjust for faster/slower day-night cycle
+  startTime: 0.45, // Start near noon
+});
 
 // ---------------------------------------------------------------------------
 // Physics car
@@ -58,6 +64,9 @@ car.mesh.traverse((child) => {
     child.material.depthWrite = false;
   }
 });
+
+// Add headlights to the car
+lighting.createCarHeadlights(car.mesh);
 
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
@@ -97,6 +106,40 @@ scene.add(cameraRig.root);
 cameraRig.attachTo(car.mesh);
 
 // ---------------------------------------------------------------------------
+// Time control UI ( press T to toggle time display, +/- to adjust)
+// ---------------------------------------------------------------------------
+
+let showTime = false;
+const timeDisplay = document.createElement("div");
+timeDisplay.style.cssText = `
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  background: rgba(0,0,0,0.5);
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: none;
+  z-index: 1000;
+`;
+document.body.appendChild(timeDisplay);
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "t" || e.key === "T") {
+    showTime = !showTime;
+    timeDisplay.style.display = showTime ? "block" : "none";
+  }
+  if (e.key === "=" || e.key === "+") {
+    lighting.setTimeOfDay(lighting.timeOfDay + 0.02);
+  }
+  if (e.key === "-" || e.key === "_") {
+    lighting.setTimeOfDay(lighting.timeOfDay - 0.02);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Resize
 // ---------------------------------------------------------------------------
 
@@ -115,8 +158,15 @@ function animate() {
   requestAnimationFrame(animate);
 
   const dt = Math.min(0.033, clock.getDelta());
+
   car.update(dt, getHeightAndNormal);
   cameraRig.update(dt);
+  lighting.update(dt);
+
+  // Update time display
+  if (showTime) {
+    timeDisplay.textContent = `Time: ${lighting.getTimeString()} | Press +/- to adjust`;
+  }
 
   renderer.render(scene, cameraRig.camera);
 }

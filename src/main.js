@@ -111,7 +111,7 @@ cameraRig.attachTo(car.mesh);
 cameraRig.setTerrainSampler(getHeightAndNormal);
 
 // ---------------------------------------------------------------------------
-// Time control UI ( press T to toggle time display, +/- to adjust)
+// Control UI
 // ---------------------------------------------------------------------------
 
 let showTime = false;
@@ -131,6 +131,70 @@ timeDisplay.style.cssText = `
 `;
 document.body.appendChild(timeDisplay);
 
+// Cinematic mode indicator
+const cinematicIndicator = document.createElement("div");
+cinematicIndicator.style.cssText = `
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  background: rgba(0,0,0,0.7);
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: none;
+  z-index: 1000;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+`;
+cinematicIndicator.textContent = "Click or scroll to exit";
+document.body.appendChild(cinematicIndicator);
+
+// Controls help (hidden by default, press ? to show)
+const controlsHelp = document.createElement("div");
+controlsHelp.style.cssText = `
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 8px 12px;
+  border-radius: 4px;
+  z-index: 1000;
+  line-height: 1.6;
+  display: none;
+`;
+controlsHelp.innerHTML = `
+  C — Cinematic mode<br>
+  T — Time display<br>
+  +/- — Adjust time<br>
+  Mouse — Rotate camera<br>
+  Scroll — Zoom<br>
+  ? — Hide controls
+`;
+document.body.appendChild(controlsHelp);
+
+// Small hint to show ? for help
+const helpHint = document.createElement("div");
+helpHint.style.cssText = `
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 10px;
+  border-radius: 4px;
+  z-index: 1000;
+`;
+helpHint.textContent = "? — Help";
+document.body.appendChild(helpHint);
+
 window.addEventListener("keydown", (e) => {
   if (e.key === "t" || e.key === "T") {
     showTime = !showTime;
@@ -142,6 +206,25 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "-" || e.key === "_") {
     lighting.setTimeOfDay(lighting.timeOfDay - 0.02);
   }
+  if (e.key === "c" || e.key === "C") {
+    cameraRig.toggleCinematicMode();
+    cinematicIndicator.style.display = cameraRig.cinematicMode
+      ? "block"
+      : "none";
+  }
+  if (e.key === "?" || e.key === "/") {
+    const isVisible = controlsHelp.style.display !== "none";
+    controlsHelp.style.display = isVisible ? "none" : "block";
+    helpHint.style.display = isVisible ? "block" : "none";
+  }
+});
+
+// Hide cinematic indicator when mode is exited via mouse
+window.addEventListener("mousedown", () => {
+  cinematicIndicator.style.display = "none";
+});
+window.addEventListener("wheel", () => {
+  cinematicIndicator.style.display = "none";
 });
 
 // ---------------------------------------------------------------------------

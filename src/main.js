@@ -101,9 +101,14 @@ mtlLoader.load("/models/Car.mtl", (materials) => {
 // Camera rig
 // ---------------------------------------------------------------------------
 
-const cameraRig = new CameraRig();
+const cameraRig = new CameraRig({
+  minHeightAboveTerrain: 1.5, // Camera stays at least 1.5 units above ground
+});
 scene.add(cameraRig.root);
 cameraRig.attachTo(car.mesh);
+
+// Connect terrain height sampling to camera
+cameraRig.setTerrainSampler(getHeightAndNormal);
 
 // ---------------------------------------------------------------------------
 // Time control UI ( press T to toggle time display, +/- to adjust)

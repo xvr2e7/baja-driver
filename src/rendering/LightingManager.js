@@ -90,14 +90,14 @@ export class LightingManager {
       0.5,
       1.5
     );
-    leftLight.position.set(-0.6, 0.2, -1.8); // Front left of car
+    leftLight.position.set(-0.6, 0.2, 1.5); // Front left of car
     leftLight.castShadow = true;
     leftLight.shadow.mapSize.set(512, 512);
     leftLight.shadow.camera.near = 0.5;
     leftLight.shadow.camera.far = 50;
 
     const leftTarget = new THREE.Object3D();
-    leftTarget.position.set(-0.6, -0.5, -15); // Target in front
+    leftTarget.position.set(-0.6, -0.5, 15); // Target in front
     carMesh.add(leftTarget);
     leftLight.target = leftTarget;
 
@@ -113,14 +113,14 @@ export class LightingManager {
       0.5,
       1.5
     );
-    rightLight.position.set(0.6, 0.2, -1.8); // Front right of car
+    rightLight.position.set(0.6, 0.2, 1.5); // Front right of car
     rightLight.castShadow = true;
     rightLight.shadow.mapSize.set(512, 512);
     rightLight.shadow.camera.near = 0.5;
     rightLight.shadow.camera.far = 50;
 
     const rightTarget = new THREE.Object3D();
-    rightTarget.position.set(0.6, -0.5, -15); // Target in front
+    rightTarget.position.set(0.6, -0.5, 15); // Target in front
     carMesh.add(rightTarget);
     rightLight.target = rightTarget;
 
@@ -130,12 +130,12 @@ export class LightingManager {
     this.taillights = [];
 
     const leftTail = new THREE.PointLight(0xff2200, 0, 8);
-    leftTail.position.set(-0.5, 0.3, 1.5); // Back left
+    leftTail.position.set(-0.5, 0.3, -1.8); // Back left
     carMesh.add(leftTail);
     this.taillights.push(leftTail);
 
     const rightTail = new THREE.PointLight(0xff2200, 0, 8);
-    rightTail.position.set(0.5, 0.3, 1.5); // Back right
+    rightTail.position.set(0.5, 0.3, -1.8); // Back right
     carMesh.add(rightTail);
     this.taillights.push(rightTail);
   }

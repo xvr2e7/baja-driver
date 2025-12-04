@@ -195,6 +195,23 @@ timeDisplay.style.cssText = `
 `;
 document.body.appendChild(timeDisplay);
 
+// Camera mode indicator
+const cameraModeIndicator = document.createElement("div");
+cameraModeIndicator.style.cssText = `
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.6);
+  padding: 6px 12px;
+  border-radius: 4px;
+  z-index: 1000;
+`;
+cameraModeIndicator.textContent = "Camera: Follow";
+document.body.appendChild(cameraModeIndicator);
+
 // Cinematic mode indicator
 const cinematicIndicator = document.createElement("div");
 cinematicIndicator.style.cssText = `
@@ -233,11 +250,12 @@ controlsHelp.style.cssText = `
   display: none;
 `;
 controlsHelp.innerHTML = `
+  R — Toggle camera mode<br>
   C — Cinematic mode<br>
   T — Time display<br>
   +/- — Adjust time<br>
-  Mouse — Rotate camera<br>
-  Scroll — Zoom<br>
+  Mouse — Rotate camera (manual mode)<br>
+  Scroll — Zoom (manual mode)<br>
   ? — Hide controls
 `;
 document.body.appendChild(controlsHelp);
@@ -260,6 +278,11 @@ helpHint.textContent = "? — Help";
 document.body.appendChild(helpHint);
 
 window.addEventListener("keydown", (e) => {
+  if (e.key === "r" || e.key === "R") {
+    cameraRig.toggleCameraMode();
+    cameraModeIndicator.textContent =
+      cameraRig.cameraMode === "follow" ? "Camera: Follow" : "Camera: Manual";
+  }
   if (e.key === "t" || e.key === "T") {
     showTime = !showTime;
     timeDisplay.style.display = showTime ? "block" : "none";

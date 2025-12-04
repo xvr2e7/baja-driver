@@ -6,7 +6,8 @@ import { setupLighting } from "./rendering/LightingManager.js";
 import { createTerrain } from "./world/TerrainGenerator.js";
 import { CameraRig } from "./rendering/CameraController.js";
 import { BlockCar } from "./physics/VehicleDynamics.js";
-
+import {addRocks} from "./world/rocks.js";
+import { buildRockColliders, resolveCarCollisions,  } from "./physics/collision.js";
 // ---------------------------------------------------------------------------
 // Scene & renderer
 // ---------------------------------------------------------------------------
@@ -32,6 +33,18 @@ const { terrainMesh, getHeightAndNormal } = createTerrain({
 
 terrainMesh.receiveShadow = true;
 scene.add(terrainMesh);
+
+//prcedule rocks
+const rocks = addRocks(scene, terrainMesh, getHeightAndNormal, {
+  count: 300,
+  minScale: 0.25,
+  maxScale: 1.2,
+  color: 0x6a5a48,
+  avoidRadius: 10,
+  avoidSteep: 0.55,
+  cluster: { enabled: true, clusters: 12, clusterRadius: 10 }
+});
+const rockColliders = buildRockColliders(rocks, { baseRadius: 0.9, breakable: false });
 
 // ---------------------------------------------------------------------------
 // Obstacles (Palm Trees)
@@ -169,6 +182,12 @@ function animate() {
   // pass obstacles into the physics update
   car.update(dt, getHeightAndNormal, obstacles);
   cameraRig.update(dt);
+  resolveCarCollisions(car, rockColliders, null,
+  {restitution: 0.45,
+  friction: 0.7,
+  carRadiusFactor: 0.6,
+  breakThreshold: 6.5,
+  debug: false});
 
   renderer.render(scene, cameraRig.camera);
 }

@@ -6,8 +6,11 @@ import { LightingManager } from "./rendering/LightingManager.js";
 import { createTerrain } from "./world/TerrainGenerator.js";
 import { CameraRig } from "./rendering/CameraController.js";
 import { BlockCar } from "./physics/VehicleDynamics.js";
-import {addRocks} from "./world/rocks.js";
-import { buildRockColliders, resolveCarCollisions,  } from "./physics/collision.js";
+import { addRocks } from "./world/rocks.js";
+import {
+  buildRockColliders,
+  resolveCarCollisions,
+} from "./physics/collision.js";
 // ---------------------------------------------------------------------------
 // Scene & renderer
 // ---------------------------------------------------------------------------
@@ -45,9 +48,12 @@ const rocks = addRocks(scene, terrainMesh, getHeightAndNormal, {
   color: 0x6a5a48,
   avoidRadius: 10,
   avoidSteep: 0.55,
-  cluster: { enabled: true, clusters: 12, clusterRadius: 10 }
+  cluster: { enabled: true, clusters: 12, clusterRadius: 10 },
 });
-const rockColliders = buildRockColliders(rocks, { baseRadius: 0.9, breakable: false });
+const rockColliders = buildRockColliders(rocks, {
+  baseRadius: 0.9,
+  breakable: false,
+});
 
 // ---------------------------------------------------------------------------
 // Obstacles (Palm Trees)
@@ -171,9 +177,6 @@ const cameraRig = new CameraRig({
 scene.add(cameraRig.root);
 cameraRig.attachTo(car.mesh);
 
-// Connect terrain height sampling to camera
-cameraRig.setTerrainSampler(getHeightAndNormal);
-
 // ---------------------------------------------------------------------------
 // Control UI
 // ---------------------------------------------------------------------------
@@ -195,44 +198,6 @@ timeDisplay.style.cssText = `
 `;
 document.body.appendChild(timeDisplay);
 
-// Camera mode indicator
-const cameraModeIndicator = document.createElement("div");
-cameraModeIndicator.style.cssText = `
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  color: white;
-  font-family: monospace;
-  font-size: 12px;
-  background: rgba(0,0,0,0.6);
-  padding: 6px 12px;
-  border-radius: 4px;
-  z-index: 1000;
-`;
-cameraModeIndicator.textContent = "Camera: Follow";
-document.body.appendChild(cameraModeIndicator);
-
-// Cinematic mode indicator
-const cinematicIndicator = document.createElement("div");
-cinematicIndicator.style.cssText = `
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: white;
-  font-family: monospace;
-  font-size: 14px;
-  background: rgba(0,0,0,0.7);
-  padding: 10px 20px;
-  border-radius: 20px;
-  display: none;
-  z-index: 1000;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-`;
-cinematicIndicator.textContent = "Click or scroll to exit";
-document.body.appendChild(cinematicIndicator);
-
 // Controls help (hidden by default, press ? to show)
 const controlsHelp = document.createElement("div");
 controlsHelp.style.cssText = `
@@ -250,8 +215,7 @@ controlsHelp.style.cssText = `
   display: none;
 `;
 controlsHelp.innerHTML = `
-  R — Toggle camera mode<br>
-  C — Cinematic mode<br>
+  C — Toggle camera mode<br>
   T — Time display<br>
   +/- — Adjust time<br>
   Mouse — Rotate camera (manual mode)<br>
@@ -293,25 +257,11 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "-" || e.key === "_") {
     lighting.setTimeOfDay(lighting.timeOfDay - 0.02);
   }
-  if (e.key === "c" || e.key === "C") {
-    cameraRig.toggleCinematicMode();
-    cinematicIndicator.style.display = cameraRig.cinematicMode
-      ? "block"
-      : "none";
-  }
   if (e.key === "?" || e.key === "/") {
     const isVisible = controlsHelp.style.display !== "none";
     controlsHelp.style.display = isVisible ? "none" : "block";
     helpHint.style.display = isVisible ? "block" : "none";
   }
-});
-
-// Hide cinematic indicator when mode is exited via mouse
-window.addEventListener("mousedown", () => {
-  cinematicIndicator.style.display = "none";
-});
-window.addEventListener("wheel", () => {
-  cinematicIndicator.style.display = "none";
 });
 
 // ---------------------------------------------------------------------------
@@ -338,15 +288,15 @@ function animate() {
   cameraRig.update(dt);
   lighting.update(dt);
 
-  resolveCarCollisions(car, rockColliders, null,
-  {restitution: 0.45,
-  friction: 0.7,
-  carRadiusFactor: 0.6,
-  breakThreshold: 6.5,
-      debug: false
-    });
-  
-  if (showTime) { 
+  resolveCarCollisions(car, rockColliders, null, {
+    restitution: 0.45,
+    friction: 0.7,
+    carRadiusFactor: 0.6,
+    breakThreshold: 6.5,
+    debug: false,
+  });
+
+  if (showTime) {
     timeDisplay.textContent = `Time: ${lighting.getTimeString()} | Press +/- to adjust`;
   }
 

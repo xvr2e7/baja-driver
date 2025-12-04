@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { setupRenderer } from "./rendering/RendererSetup.js";
-import { setupLighting } from "./rendering/LightingManager.js";
+import { LightingManager } from "./rendering/LightingManager.js";
 import { createTerrain } from "./world/TerrainGenerator.js";
 import { CameraRig } from "./rendering/CameraController.js";
 import { BlockCar } from "./physics/VehicleDynamics.js";
@@ -16,6 +16,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
 const renderer = setupRenderer(document.querySelector("#app"));
+
+// Enable VSM shadows for softer look
+renderer.shadowMap.type = THREE.VSMShadowMap;
 
 // ---------------------------------------------------------------------------
 // Terrain
@@ -101,10 +104,13 @@ palmMtlLoader.load("/models/PalmTree.mtl", (materials) => {
 });
 
 // ---------------------------------------------------------------------------
-// Lighting
+// Lighting with day/night cycle
 // ---------------------------------------------------------------------------
 
-setupLighting(scene);
+const lighting = new LightingManager(scene, {
+  cycleSpeed: 0.015, // Adjust for faster/slower day-night cycle
+  startTime: 0.45, // Start near noon
+});
 
 // ---------------------------------------------------------------------------
 // Physics car
@@ -127,6 +133,9 @@ car.mesh.traverse((child) => {
     child.material.depthWrite = false;
   }
 });
+
+// Add headlights to the car
+lighting.createCarHeadlights(car.mesh);
 
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
@@ -156,9 +165,131 @@ mtlLoader.load("/models/Car.mtl", (materials) => {
 // Camera rig
 // ---------------------------------------------------------------------------
 
-const cameraRig = new CameraRig();
+const cameraRig = new CameraRig({
+  minHeightAboveTerrain: 1.5, // Camera stays at least 1.5 units above ground
+});
 scene.add(cameraRig.root);
 cameraRig.attachTo(car.mesh);
+
+// Connect terrain height sampling to camera
+cameraRig.setTerrainSampler(getHeightAndNormal);
+
+// ---------------------------------------------------------------------------
+// Control UI
+// ---------------------------------------------------------------------------
+
+let showTime = false;
+const timeDisplay = document.createElement("div");
+timeDisplay.style.cssText = `
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  background: rgba(0,0,0,0.5);
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: none;
+  z-index: 1000;
+`;
+document.body.appendChild(timeDisplay);
+
+// Cinematic mode indicator
+const cinematicIndicator = document.createElement("div");
+cinematicIndicator.style.cssText = `
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  background: rgba(0,0,0,0.7);
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: none;
+  z-index: 1000;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+`;
+cinematicIndicator.textContent = "Click or scroll to exit";
+document.body.appendChild(cinematicIndicator);
+
+// Controls help (hidden by default, press ? to show)
+const controlsHelp = document.createElement("div");
+controlsHelp.style.cssText = `
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 8px 12px;
+  border-radius: 4px;
+  z-index: 1000;
+  line-height: 1.6;
+  display: none;
+`;
+controlsHelp.innerHTML = `
+  C — Cinematic mode<br>
+  T — Time display<br>
+  +/- — Adjust time<br>
+  Mouse — Rotate camera<br>
+  Scroll — Zoom<br>
+  ? — Hide controls
+`;
+document.body.appendChild(controlsHelp);
+
+// Small hint to show ? for help
+const helpHint = document.createElement("div");
+helpHint.style.cssText = `
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 10px;
+  border-radius: 4px;
+  z-index: 1000;
+`;
+helpHint.textContent = "? — Help";
+document.body.appendChild(helpHint);
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "t" || e.key === "T") {
+    showTime = !showTime;
+    timeDisplay.style.display = showTime ? "block" : "none";
+  }
+  if (e.key === "=" || e.key === "+") {
+    lighting.setTimeOfDay(lighting.timeOfDay + 0.02);
+  }
+  if (e.key === "-" || e.key === "_") {
+    lighting.setTimeOfDay(lighting.timeOfDay - 0.02);
+  }
+  if (e.key === "c" || e.key === "C") {
+    cameraRig.toggleCinematicMode();
+    cinematicIndicator.style.display = cameraRig.cinematicMode
+      ? "block"
+      : "none";
+  }
+  if (e.key === "?" || e.key === "/") {
+    const isVisible = controlsHelp.style.display !== "none";
+    controlsHelp.style.display = isVisible ? "none" : "block";
+    helpHint.style.display = isVisible ? "block" : "none";
+  }
+});
+
+// Hide cinematic indicator when mode is exited via mouse
+window.addEventListener("mousedown", () => {
+  cinematicIndicator.style.display = "none";
+});
+window.addEventListener("wheel", () => {
+  cinematicIndicator.style.display = "none";
+});
 
 // ---------------------------------------------------------------------------
 // Resize
@@ -182,12 +313,19 @@ function animate() {
   // pass obstacles into the physics update
   car.update(dt, getHeightAndNormal, obstacles);
   cameraRig.update(dt);
+  lighting.update(dt);
+
   resolveCarCollisions(car, rockColliders, null,
   {restitution: 0.45,
   friction: 0.7,
   carRadiusFactor: 0.6,
   breakThreshold: 6.5,
-  debug: false});
+      debug: false
+    });
+  
+  if (showTime) { 
+    timeDisplay.textContent = `Time: ${lighting.getTimeString()} | Press +/- to adjust`;
+  }
 
   renderer.render(scene, cameraRig.camera);
 }

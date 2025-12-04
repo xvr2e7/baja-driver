@@ -131,56 +131,10 @@ export function updateRockCollidersWorldPositions(colliders) {
 
 
 /**
- * Build tree colliders from a Group of tree children.
- * If you later move the group, call updateTreeCollidersPositions().
- */
-export function buildTreeColliders(treeGroup, { baseRadius = 1.0 } = {}) {
-  const colliders = [];
-  if (!treeGroup || !Array.isArray(treeGroup.children)) return colliders;
-  for (let i = 0; i < treeGroup.children.length; i++) {
-    try {
-      const child = treeGroup.children[i];
-      const pos = new THREE.Vector3();
-      child.getWorldPosition(pos);
-      const scale = new THREE.Vector3();
-      child.getWorldScale(scale);
-      const r = baseRadius * Math.max(Math.abs(scale.x || 1), Math.abs(scale.y || 1), Math.abs(scale.z || 1));
-      colliders.push({
-        pos: pos.clone(),
-        radius: Math.max(0.05, r),
-        mesh: child,
-        breakable: false,
-        broken: false,
-        lastDist: Infinity,
-      });
-    } catch (err) {
-      console.warn("buildTreeColliders: failed for child", i, err);
-    }
-  }
-  return colliders;
-}
-
-export function updateTreeCollidersPositions(treeColliders) {
-  if (!Array.isArray(treeColliders)) return;
-  for (let i = 0; i < treeColliders.length; i++) {
-    const c = treeColliders[i];
-    try {
-      if (!c || !c.mesh) continue;
-      c.mesh.getWorldPosition(c.pos);
-      const scale = new THREE.Vector3();
-      c.mesh.getWorldScale(scale);
-      c.radius = Math.max(0.05, c.radius * Math.max(Math.abs(scale.x || 1), Math.abs(scale.y || 1), Math.abs(scale.z || 1)));
-    } catch (err) {
-      console.warn("updateTreeCollidersPositions: failed for collider", i, err);
-    }
-  }
-}
-
-/**
  * Resolve collisions and optionally return true if any collision occurred.
  * - returns { any: boolean, hits: number }
  */
-export function resolveCarCollisions(car, rockColliders = [], treeColliders = [], options = {}) {
+export function resolveCarCollisions(car, rockColliders = [], options = {}) {
   const { restitution = 0.45, friction = 0.6, carRadiusFactor = 0.7, breakThreshold = 6.0, debug = false } = options;
   try {
     if (!car || !car.mesh) return { any: false, hits: 0 };
@@ -245,7 +199,7 @@ export function resolveCarCollisions(car, rockColliders = [], treeColliders = []
     };
 
     if (Array.isArray(rockColliders)) for (let i = 0; i < rockColliders.length; i++) handle(rockColliders[i]);
-    if (Array.isArray(treeColliders)) for (let i = 0; i < treeColliders.length; i++) handle(treeColliders[i]);
+    
 
     if (debug && hits > 0) console.log("resolveCarCollisions: hits=", hits);
     return { any: hits > 0, hits };

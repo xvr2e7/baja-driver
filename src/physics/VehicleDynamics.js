@@ -6,6 +6,7 @@ export class BlockCar {
     height = 1,
     length = 3,
     start = new THREE.Vector3(),
+    audioListener = null,
   } = {}) {
     this.width = width;
     this.height = height;
@@ -43,7 +44,28 @@ export class BlockCar {
     this._tmp = new THREE.Vector3();
     this._up = new THREE.Vector3(0, 1, 0);
     this._quat = new THREE.Quaternion();
+
+    if (!audioListener) {
+      console.warn("BlockCar: No audioListener provided. Car sound disabled.");
+    } else {
+      this.listener = audioListener;
+      this.engineSound = new THREE.Audio(this.listener);
+
+      const audioLoader = new THREE.AudioLoader();
+      audioLoader.load(
+        "public/models/muscle-car-engine-idling-437781.mp3",                     // <--- your file
+        (buffer) => {
+          this.engineSound.setBuffer(buffer);
+          this.engineSound.setLoop(true);
+          this.engineSound.setVolume(0.3);
+        }
+      );
+
+      // attach sound to the car so it follows
+      this.mesh.add(this.engineSound);
+    }
   }
+  
 
   _handleInput(dt) {
     // If camera is in free mode, ignore driving input
@@ -71,6 +93,15 @@ export class BlockCar {
 
   update(dt, getHeightAndNormal, obstacles = []) {
     this._handleInput(dt);
+
+    if (this.engineSound && this.engineSound.buffer) {
+      const moving = this.vel.length() > 0.3 || Math.abs(this.throttle) > 0;
+      if (moving && !this.engineSound.isPlaying) {
+        this.engineSound.play();
+      } else if (!moving && this.engineSound.isPlaying) {
+        this.engineSound.stop();
+      }
+    }
 
     // forward in XZ from heading
     this._forward.set(Math.sin(this.heading), 0, Math.cos(this.heading));
@@ -122,6 +153,7 @@ export class BlockCar {
           this.vel.multiplyScalar(0.65);
         }
       }
+      
     }
 
     // -----------------------------------------------------------------------

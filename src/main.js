@@ -109,12 +109,14 @@ setupLighting(scene);
 // ---------------------------------------------------------------------------
 // Physics car
 // ---------------------------------------------------------------------------
+const listener1 = new THREE.AudioListener();
 
 const car = new BlockCar({
   width: 2,
   height: 1,
   length: 3,
   start: new THREE.Vector3(0, 10, 0),
+  audioListener: listener1,
 });
 
 scene.add(car.mesh);
@@ -130,6 +132,17 @@ car.mesh.traverse((child) => {
 
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
+
+const listener = new THREE.AudioListener();
+car.mesh.add( listener );
+const sound = new THREE.Audio(listener);
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('/models/car-straring-sound-126708.mp3', function(buffer) {
+    sound.setBuffer(buffer);
+    sound.setLoop(false);
+    sound.setVolume(0.5);
+    sound.play();
+});
 
 mtlLoader.load("/models/Car.mtl", (materials) => {
   materials.preload();
@@ -182,7 +195,7 @@ function animate() {
   // pass obstacles into the physics update
   car.update(dt, getHeightAndNormal, obstacles);
   cameraRig.update(dt);
-  resolveCarCollisions(car, rockColliders, null,
+  resolveCarCollisions(car, rockColliders,
   {restitution: 0.45,
   friction: 0.7,
   carRadiusFactor: 0.6,

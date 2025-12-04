@@ -8,7 +8,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "To build:  initialize nod.js project by running: npm init -y install threejs by running: npm install --save three install vite by running: npm install --save-dev vite To run: npx vite",
   "dependencies": {
     "three": "^0.181.1"
   },

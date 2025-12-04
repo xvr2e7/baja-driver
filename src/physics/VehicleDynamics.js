@@ -23,11 +23,16 @@ export class BlockCar {
 
     this.vel = new THREE.Vector3(); // world-space linear velocity
     this.heading = 0; // yaw (radians)
-    this.turnSpeed = 1.8; // rad/s at full steer
-    this.accel = 10; // m/s^2
+    this.turnSpeed = 1.2; // rad/s at full steer
+    this.accel = 20; // m/s^2
     this.drag = 0.98;
     this.steer = 0;
     this.throttle = 0;
+
+    // Invisible wall: half-size of the playable square area (world units)
+    // Terrain size is 400; mountains start where distToEdge ~ size*0.18,
+    // so this keeps you just inside that ring.
+    this.boundsHalfSize = 180; // tweak if you change terrain settings
 
     // keyboard
     this._keys = new Set();
@@ -41,6 +46,13 @@ export class BlockCar {
   }
 
   _handleInput(dt) {
+    // If camera is in free mode, ignore driving input
+    if (typeof window !== "undefined" && window.__cameraMode === "free") {
+      this.steer = 0;
+      this.throttle = 0;
+      return;
+    }
+
     const left = this._keys.has("ArrowLeft") || this._keys.has("KeyA");
     const right = this._keys.has("ArrowRight") || this._keys.has("KeyD");
     const up = this._keys.has("ArrowUp") || this._keys.has("KeyW");
@@ -52,13 +64,12 @@ export class BlockCar {
     this.steer = steerInput;
     this.throttle = throttleInput;
 
-    // rotate heading proportional to steer and current speed (car-like)
     const speed = this.vel.length();
     this.heading +=
       this.steer * this.turnSpeed * dt * THREE.MathUtils.clamp(speed / 8, 0, 1);
   }
 
-  update(dt, getHeightAndNormal) {
+  update(dt, getHeightAndNormal, obstacles = []) {
     this._handleInput(dt);
 
     // forward in XZ from heading
@@ -75,6 +86,90 @@ export class BlockCar {
 
     // integrate position (XZ only; Y comes from terrain)
     this.mesh.position.addScaledVector(this.vel, dt);
+
+    // -----------------------------------------------------------------------
+    // Simple obstacle collisions (bounce off palm trees)
+    // -----------------------------------------------------------------------
+    if (obstacles && obstacles.length > 0) {
+      const carRadius = Math.max(this.width, this.length) * 0.5;
+
+      for (const obs of obstacles) {
+        if (!obs) continue;
+        const obsPos = obs.position;
+        const dx = this.mesh.position.x - obsPos.x;
+        const dz = this.mesh.position.z - obsPos.z;
+
+        const distSq = dx * dx + dz * dz;
+        const obsRadius = obs.userData.radius || 3;
+        const minDist = carRadius + obsRadius;
+
+        if (distSq < minDist * minDist) {
+          const dist = Math.sqrt(distSq) || 0.0001;
+          const nx = dx / dist;
+          const nz = dz / dist;
+
+          // push car out of the obstacle
+          const penetration = minDist - dist;
+          this.mesh.position.x += nx * penetration;
+          this.mesh.position.z += nz * penetration;
+
+          // reflect velocity in XZ plane
+          const dot = this.vel.x * nx + this.vel.z * nz;
+          this.vel.x -= 2 * dot * nx;
+          this.vel.z -= 2 * dot * nz;
+
+          // lose some energy on bounce
+          this.vel.multiplyScalar(0.65);
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Invisible boundary wall before the mountains
+    // -----------------------------------------------------------------------
+    const limit = this.boundsHalfSize;
+    let hitWall = false;
+    let nxWall = 0;
+    let nzWall = 0;
+
+    // X boundaries
+    if (this.mesh.position.x > limit) {
+      this.mesh.position.x = limit;
+      nxWall = -1;
+      hitWall = true;
+    } else if (this.mesh.position.x < -limit) {
+      this.mesh.position.x = -limit;
+      nxWall = 1;
+      hitWall = true;
+    }
+
+    // Z boundaries
+    if (this.mesh.position.z > limit) {
+      this.mesh.position.z = limit;
+      nzWall = -1;
+      hitWall = true;
+    } else if (this.mesh.position.z < -limit) {
+      this.mesh.position.z = -limit;
+      nzWall = 1;
+      hitWall = true;
+    }
+
+    if (hitWall) {
+      // combine normal (handles corners too)
+      const len = Math.hypot(nxWall, nzWall) || 1;
+      const nx = nxWall / len;
+      const nz = nzWall / len;
+
+      // reflect velocity across wall normal in XZ plane
+      const dotWall = this.vel.x * nx + this.vel.z * nz;
+      this.vel.x -= 2 * dotWall * nx;
+      this.vel.z -= 2 * dotWall * nz;
+
+      // lose most of the speed on impact
+      this.vel.multiplyScalar(0.4);
+    }
+
+    // sample terrain for height + normal at current x,z
     const { height, normal } = getHeightAndNormal(
       this.mesh.position.x,
       this.mesh.position.z
@@ -85,7 +180,6 @@ export class BlockCar {
 
     // orient: align up with terrain normal and yaw with heading
     const yawQuat = this._quat.setFromAxisAngle(this._up, this.heading);
-    // compute a quaternion that sets 'up' to the terrain normal
     const alignQuat = new THREE.Quaternion().setFromUnitVectors(
       this._up,
       normal.clone().normalize()

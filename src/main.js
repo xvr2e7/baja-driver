@@ -127,7 +127,7 @@ const car = new BlockCar({
   height: 1,
   length: 3,
   start: new THREE.Vector3(0, 10, 0),
-  audioListener: listener2,
+  audioListener: listener1,
 });
 
 scene.add(car.mesh);

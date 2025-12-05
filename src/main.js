@@ -173,6 +173,7 @@ mtlLoader.load("/models/Car.mtl", (materials) => {
 
 const cameraRig = new CameraRig({
   minHeightAboveTerrain: 1.5, // Camera stays at least 1.5 units above ground
+  getHeightAndNormal: getHeightAndNormal,
 });
 scene.add(cameraRig.root);
 cameraRig.attachTo(car.mesh);

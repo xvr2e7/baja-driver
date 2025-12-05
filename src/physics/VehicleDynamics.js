@@ -29,10 +29,7 @@ export class BlockCar {
     this.steer = 0;
     this.throttle = 0;
 
-    // Invisible wall: half-size of the playable square area (world units)
-    // Terrain size is 400; mountains start where distToEdge ~ size*0.18,
-    // so this keeps you just inside that ring.
-    this.boundsHalfSize = 180; // tweak if you change terrain settings
+    this.boundsHalfSize = 180;
 
     // keyboard
     this._keys = new Set();

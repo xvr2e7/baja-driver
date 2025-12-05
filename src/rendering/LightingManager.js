@@ -50,10 +50,9 @@ export class LightingManager {
     this.sun.position.set(60, 80, 30);
     this.sun.castShadow = true;
 
-    // Enhanced shadow settings for softer shadows
-    this.sun.shadow.mapSize.set(4096, 4096); // Higher resolution
-    this.sun.shadow.radius = 4; // Soft shadow blur radius
-    this.sun.shadow.blurSamples = 16; // More samples for smoother blur
+    this.sun.shadow.mapSize.set(4096, 4096);
+    this.sun.shadow.radius = 4;
+    this.sun.shadow.blurSamples = 16;
 
     const shadowSize = 150;
     this.sun.shadow.camera.left = -shadowSize;
@@ -270,7 +269,6 @@ export class LightingManager {
   }
 }
 
-// Keep the old function for backwards compatibility if needed
 export function setupLighting(scene) {
   const manager = new LightingManager(scene);
   return manager;

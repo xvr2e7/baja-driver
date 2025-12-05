@@ -1,10 +1,5 @@
-// addRocks_reliable.js
 import * as THREE from "three";
 
-/**
- * addRocksReliable(scene, terrainMesh, getHeightAndNormal, opts)
- * Returns the InstancedMesh (always) and ensures matrices are set.
- */
 export function addRocks(scene, terrainMesh, getHeightAndNormal, {
   count = 300,
   minScale = 0.18,

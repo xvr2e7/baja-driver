@@ -1,4 +1,3 @@
-// collision_helpers_reliable.js
 import * as THREE from "three";
 
 function _getInstanceCount(inst) {
@@ -9,11 +8,6 @@ function _getInstanceCount(inst) {
   return 0;
 }
 
-/**
- * buildRockColliders(instOrGroup, opts)
- * - Accepts InstancedMesh / Group / Mesh
- * - Returns array of colliders with pos (world) and radius. For instanced colliders instanceId is set.
- */
 export function buildRockColliders(instOrGroup, { baseRadius = 1.0, breakable = true } = {}) {
   const colliders = [];
   if (!instOrGroup) return colliders;
@@ -129,11 +123,6 @@ export function updateRockCollidersWorldPositions(colliders) {
   }
 }
 
-
-/**
- * Build tree colliders from a Group of tree children.
- * If you later move the group, call updateTreeCollidersPositions().
- */
 export function buildTreeColliders(treeGroup, { baseRadius = 1.0 } = {}) {
   const colliders = [];
   if (!treeGroup || !Array.isArray(treeGroup.children)) return colliders;
@@ -176,10 +165,6 @@ export function updateTreeCollidersPositions(treeColliders) {
   }
 }
 
-/**
- * Resolve collisions and optionally return true if any collision occurred.
- * - returns { any: boolean, hits: number }
- */
 export function resolveCarCollisions(car, rockColliders = [], treeColliders = [], options = {}) {
   const { restitution = 0.45, friction = 0.6, carRadiusFactor = 0.7, breakThreshold = 6.0, debug = false } = options;
   try {

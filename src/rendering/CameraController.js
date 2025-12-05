@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export class CameraRig {
-  constructor() {
+  constructor({ minHeightAboveTerrain = 1.5, getHeightAndNormal = null } = {}) {
     this.root = new THREE.Object3D();
 
     this.camera = new THREE.PerspectiveCamera(
@@ -14,18 +14,22 @@ export class CameraRig {
     this.mode = "follow"; // "follow" | "free"
     this.target = null;
 
+    // Terrain clamping
+    this.minHeightAboveTerrain = minHeightAboveTerrain;
+    this.getHeightAndNormal = getHeightAndNormal;
+
     // Expose mode globally so car can see it
     if (typeof window !== "undefined") {
       window.__cameraMode = this.mode;
     }
 
-    // --- Follow-mode settings ---
+    // --- Follow-mode  ---
     this.followDistance = 12;
     this.followHeight = 5;
     this.followLookOffset = 1.5;
     this.followLerp = 8;
 
-    // --- Free-roam settings ---
+    // --- Free-roam ---
     this.freePosition = new THREE.Vector3(0, 10, 25);
     this.yaw = 0;
     this.pitch = -0.3;
@@ -103,7 +107,7 @@ export class CameraRig {
   }
 
   _handleMouseDown(event) {
-    // Allow ANY mouse button / trackpad click to start rotating in free mode
+    // Allow any mouse button / trackpad click to start rotating in free mode
     if (this.mode === "free") {
       this._mouseDown = true;
     }
@@ -138,6 +142,18 @@ export class CameraRig {
 
     const delta = Math.sign(event.deltaY) * 5;
     this.freePosition.addScaledVector(this._forward, delta);
+
+    // Clamp camera above terrain after wheel zoom
+    if (this.getHeightAndNormal) {
+      const { height: terrainHeight } = this.getHeightAndNormal(
+        this.freePosition.x,
+        this.freePosition.z
+      );
+      const minY = terrainHeight + this.minHeightAboveTerrain;
+      if (this.freePosition.y < minY) {
+        this.freePosition.y = minY;
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -174,6 +190,18 @@ export class CameraRig {
 
     const lerpFactor = 1 - Math.exp(-this.followLerp * dt);
     this.camera.position.lerp(this._camPos, lerpFactor);
+
+    // Clamp camera above terrain
+    if (this.getHeightAndNormal) {
+      const { height: terrainHeight } = this.getHeightAndNormal(
+        this.camera.position.x,
+        this.camera.position.z
+      );
+      const minY = terrainHeight + this.minHeightAboveTerrain;
+      if (this.camera.position.y < minY) {
+        this.camera.position.y = minY;
+      }
+    }
 
     this._lookAt
       .copy(this._targetPos)
@@ -218,6 +246,18 @@ export class CameraRig {
     if (move.lengthSq() > 0) {
       move.normalize().multiplyScalar(this.moveSpeed * dt);
       this.freePosition.add(move);
+    }
+
+    // Clamp camera above terrain in free mode
+    if (this.getHeightAndNormal) {
+      const { height: terrainHeight } = this.getHeightAndNormal(
+        this.freePosition.x,
+        this.freePosition.z
+      );
+      const minY = terrainHeight + this.minHeightAboveTerrain;
+      if (this.freePosition.y < minY) {
+        this.freePosition.y = minY;
+      }
     }
 
     this.camera.position.copy(this.freePosition);

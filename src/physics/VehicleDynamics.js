@@ -50,7 +50,7 @@ export class BlockCar {
 
       const audioLoader = new THREE.AudioLoader();
       audioLoader.load(
-        "public/models/muscle-car-engine-idling-437781.mp3",
+        "/models/muscle-car-engine-idling-437781.mp3",
         (buffer) => {
           this.engineSound.setBuffer(buffer);
           this.engineSound.setLoop(true);

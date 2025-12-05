@@ -125,7 +125,7 @@ export function updateRockCollidersWorldPositions(colliders) {
       }
     } catch (err) {
       console.warn("updateRockCollidersWorldPositions: failed for collider", i, err);
-    }
+    } 
   }
 }
 

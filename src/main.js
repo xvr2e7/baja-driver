@@ -121,12 +121,13 @@ const lighting = new LightingManager(scene, {
 // ---------------------------------------------------------------------------
 // Physics car
 // ---------------------------------------------------------------------------
-
+const listener1 = new THREE.AudioListener();
 const car = new BlockCar({
   width: 2,
   height: 1,
   length: 3,
   start: new THREE.Vector3(0, 10, 0),
+  audioListener: listener2,
 });
 
 scene.add(car.mesh);
@@ -145,6 +146,17 @@ lighting.createCarHeadlights(car.mesh);
 
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
+
+const listener = new THREE.AudioListener();
+car.mesh.add( listener );
+const sound = new THREE.Audio(listener);
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('/models/car-straring-sound-126708.mp3', function(buffer) {
+    sound.setBuffer(buffer);
+    sound.setLoop(false);
+    sound.setVolume(0.5);
+    sound.play();
+});
 
 mtlLoader.load("/models/Car.mtl", (materials) => {
   materials.preload();

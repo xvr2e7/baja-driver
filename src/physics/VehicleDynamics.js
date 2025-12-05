@@ -6,6 +6,7 @@ export class BlockCar {
     height = 1,
     length = 3,
     start = new THREE.Vector3(),
+    audioListener = null,
   } = {}) {
     this.width = width;
     this.height = height;
@@ -40,6 +41,27 @@ export class BlockCar {
     this._tmp = new THREE.Vector3();
     this._up = new THREE.Vector3(0, 1, 0);
     this._quat = new THREE.Quaternion();
+
+    if (!audioListener) {
+      console.warn("BlockCar: No audioListener provided. Car sound disabled.");
+    } else {
+      this.listener = audioListener;
+      this.engineSound = new THREE.Audio(this.listener);
+
+      const audioLoader = new THREE.AudioLoader();
+      audioLoader.load(
+        "public/models/muscle-car-engine-idling-437781.mp3",
+        (buffer) => {
+          this.engineSound.setBuffer(buffer);
+          this.engineSound.setLoop(true);
+          this.engineSound.setVolume(0.3);
+        }
+      );
+
+      // attach sound to the car so it follows
+      this.mesh.add(this.engineSound);
+    }
+    
   }
 
   _handleInput(dt) {

@@ -230,6 +230,7 @@ controlsHelp.style.cssText = `
 controlsHelp.innerHTML = `
   C — Toggle camera mode<br>
   T — Time display<br>
+  Space — Pause/unpause day/night cycle<br>
   +/- — Adjust time<br>
   Mouse — Rotate camera (manual mode)<br>
   Scroll — Zoom (manual mode)<br>
@@ -263,6 +264,10 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "t" || e.key === "T") {
     showTime = !showTime;
     timeDisplay.style.display = showTime ? "block" : "none";
+  }
+  if (e.key === " ") {
+    e.preventDefault(); // Prevent page scroll
+    lighting.togglePause();
   }
   if (e.key === "=" || e.key === "+") {
     lighting.setTimeOfDay(lighting.timeOfDay + 0.02);

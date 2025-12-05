@@ -7,6 +7,7 @@ export class LightingManager {
     // Day/night cycle settings
     this.cycleSpeed = options.cycleSpeed || 0.02;
     this.timeOfDay = options.startTime || 0.25; // 0-1, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset, 0/1 = midnight
+    this.paused = false;
 
     // Sky colors for different times
     this.skyColors = {
@@ -188,9 +189,11 @@ export class LightingManager {
   }
 
   update(dt) {
-    // Advance time
-    this.timeOfDay += this.cycleSpeed * dt;
-    if (this.timeOfDay >= 1) this.timeOfDay -= 1;
+    // Advance time (only if not paused)
+    if (!this.paused) {
+      this.timeOfDay += this.cycleSpeed * dt;
+      if (this.timeOfDay >= 1) this.timeOfDay -= 1;
+    }
 
     const phase = this._getTimePhase();
     const smoothT = THREE.MathUtils.smoothstep(phase.t, 0, 1);
@@ -257,6 +260,12 @@ export class LightingManager {
   // Manual time control
   setTimeOfDay(time) {
     this.timeOfDay = THREE.MathUtils.clamp(time, 0, 1);
+  }
+
+  // Toggle pause state
+  togglePause() {
+    this.paused = !this.paused;
+    return this.paused;
   }
 
   // Get current time as readable string

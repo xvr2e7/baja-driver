@@ -114,8 +114,8 @@ palmMtlLoader.load("/models/PalmTree.mtl", (materials) => {
 // ---------------------------------------------------------------------------
 
 const lighting = new LightingManager(scene, {
-  cycleSpeed: 0.015, // Adjust for faster/slower day-night cycle
-  startTime: 0.45, // Start near noon
+  cycleSpeed: 0.015,
+  startTime: 0.45,
 });
 
 // ---------------------------------------------------------------------------
@@ -148,14 +148,14 @@ const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
 
 const listener = new THREE.AudioListener();
-car.mesh.add( listener );
+car.mesh.add(listener);
 const sound = new THREE.Audio(listener);
 const audioLoader = new THREE.AudioLoader();
-audioLoader.load('/models/car-straring-sound-126708.mp3', function(buffer) {
-    sound.setBuffer(buffer);
-    sound.setLoop(false);
-    sound.setVolume(0.5);
-    sound.play();
+audioLoader.load("/models/car-straring-sound-126708.mp3", function (buffer) {
+  sound.setBuffer(buffer);
+  sound.setLoop(false);
+  sound.setVolume(0.5);
+  sound.play();
 });
 
 mtlLoader.load("/models/Car.mtl", (materials) => {
@@ -238,7 +238,6 @@ controlsHelp.innerHTML = `
 `;
 document.body.appendChild(controlsHelp);
 
-// Small hint to show ? for help
 const helpHint = document.createElement("div");
 helpHint.style.cssText = `
   position: fixed;
@@ -266,7 +265,7 @@ window.addEventListener("keydown", (e) => {
     timeDisplay.style.display = showTime ? "block" : "none";
   }
   if (e.key === " ") {
-    e.preventDefault(); // Prevent page scroll
+    e.preventDefault();
     lighting.togglePause();
   }
   if (e.key === "=" || e.key === "+") {
